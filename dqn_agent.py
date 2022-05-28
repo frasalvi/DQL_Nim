@@ -3,22 +3,29 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from collections import deque
 
-from qlearning import *
+from agent import Agent
+from qlearning import get_possible_actions
 
 # General hyperparameters
 UPDATE_TARGET_EVERY = 500
 
 class DQNAgent(Agent):
     '''
-    Description:
-        A class to implement an epsilon-greedy learning player in Nim.
+    Agent implementing Deep Q-learning for the game Nim.
 
     Parameters:
-        epsilon: float, in [0, 1]. This is a value between 0-1 that indicates the
-            probability of making a random action instead of the optimal action
-            at any given time.
+    ----------
+    epsilon: float, in [0, 1]. 
+        epsilon of the epsilon-greedy policy.
+    alpha: float. 
+        learning rate.
+    gamma: float. 
+        discount factor.
+    buffer_size : int.
+        maximum length of the replay buffer.
+    batch_size : int
+        size of the minibatch.
     '''
-
     def __init__(self, epsilon, alpha=5e-4, gamma=0.99, buffer_size=10_000, batch_size=64):
         self.epsilon = epsilon
         self.alpha = alpha
@@ -39,6 +46,16 @@ class DQNAgent(Agent):
 
     @staticmethod
     def _create_q_model():
+        '''
+        Creates a deep network for the actor playing Nim.
+
+        Returns
+        ----------
+        model : keras.Model
+            actor playing Nim. the model takes as input
+            a 9-bit encoding of the current state and outputs a list
+            of 21 probabilities, one for each action.
+        '''
         inputs = layers.Input(shape=(3, 3))
         # flatten since Dense expects the previous layer to have dimension 1, otherwise weird stuff happens
         layer0 = layers.Flatten(input_shape=(3, 3), name="flatten")(inputs)
@@ -50,20 +67,57 @@ class DQNAgent(Agent):
 
     @staticmethod
     def _encode_heaps(heaps):
-        converted = tf.convert_to_tensor([
+        '''
+        Encodes the current state in a 9-bits representation.
+
+        Parameters
+        ----------
+        heaps : list of integers
+            list of heap sizes.
+    
+        Returns
+        ----------
+        heaps_converted : tf.Tensor
+            9-bit encoding of the current state.
+        '''
+        heaps_converted = tf.convert_to_tensor([
             [(h & 4) > 0, (h & 2) > 0, (h & 1) > 0] for h in heaps
         ])
-        return converted
+        return heaps_converted
     
     @staticmethod
-    def _decode_heaps(encoded_state):
-        converted = [
-            int(row[0]) * 4 + int(row[1]) * 2 + int(row[2]) for row in encoded_state
+    def _decode_heaps(heaps_converted):
+        '''
+        Decodes the current state from its 9-bits representation.
+
+        Parameters
+        ----------
+        heaps_converted : tf.Tensor
+            9-bit encoding of the current state.
+    
+        Returns
+        ----------
+        heaps : list of integers
+            list of heap sizes.
+        '''
+        heaps = [
+            int(row[0]) * 4 + int(row[1]) * 2 + int(row[2]) for row in heaps_heaps
         ]
-        return converted
+        return heaps
 
     def get_qvalues(self, heaps):
-        # TODO: should it be true in RL training?
+        '''
+        Get the Q-values of all the 21 actions, for a given state.
+
+        Parameters
+        ----------
+        heaps : list of integers
+            list of heap sizes.
+
+        Returns
+        ----------
+        TODO
+        '''
         qvalues = self.model(
             tf.expand_dims(DQNAgent._encode_heaps(heaps), axis=0),
             training=False
@@ -75,16 +129,19 @@ class DQNAgent(Agent):
         Get the move with the highest Q-value for a given state, randomly breaking ties.
 
         Parameters
-            ----------
-            heaps : list of integers
-                    list of heap sizes.
+        ----------
+        heaps : list of integers
+                list of heap sizes.
 
         Returns
-            ----------
-            max_act : tuple
-                max_act[0] is the heap to take from (starts at 1)
-                max_act[1] is the number of obj to take from heap #move[0]
+        ----------
+        best_value: float. 
+            highest Q-value for the given state
+        best_move : tuple. Action with the highest Q-value for the given state
+            best_move[0] is the heap to take from (starts at 1)
+            best_move[1] is the number of elements to take from heap best_move[0]
         '''
+    
         """
         # Pick first in case of tie, shouldn't be too bad
         qvls = self.get_qvalues(heaps)
@@ -111,13 +168,14 @@ class DQNAgent(Agent):
         Get the highest Q-value associated to a possible action for the given state.
 
         Parameters
-            ----------
-            heaps : list of integers
-                    list of heap sizes.
+        ----------
+        heaps : list of integers
+            list of heap sizes.
 
         Returns
-            ----------
-            float (max Q-value)
+        ----------
+        best_value: float. 
+            highest Q-value for the given state.
         '''
         best_value, best_move = self._pick_best_move(heaps)
         # If the game is already finished, return 0.
@@ -130,14 +188,13 @@ class DQNAgent(Agent):
         Parameters
         ----------
         heaps : list of integers
-                list of heap sizes.
+            list of heap sizes.
 
         Returns
         -------
         move : list
             move[0] is the heap to take from (starts at 1)
             move[1] is the number of obj to take from heap #move[0]
-
         '''
         if random.random() < self.epsilon:
             # random move
@@ -148,6 +205,23 @@ class DQNAgent(Agent):
         return move
 
     def on_step(self, state, action, reward, next_state, debug):
+        '''
+        Update Q-values of the agent with off-policy update, after a step of the environment.
+
+        Parameters
+        ----------
+        state : list of integers
+            list of heap sizes.
+        action : list
+            action[0] is the heap to take from (starts at 1)
+            action[1] is the number of elements taken from heap action[0]
+        reward : int. 
+            current reward.
+        new_state : list of integers
+            list of heap sizes.
+        debug : bool. 
+            if true, print debug information.
+        '''
         # Convert the action from env format (1-3, 1-7) to internal format 0-20
         internal_action = (action[0] - 1) * 7 + (action[1] - 1)
         # Update replay buffer
@@ -157,8 +231,6 @@ class DQNAgent(Agent):
             reward,
             DQNAgent._encode_heaps(next_state)
         ))
-
-        #print("adding %s -> %s via action %s, reward %d" % (state, next_state, action, reward))
 
         # Skip updating if we haven't gathered enough samples yet
         if len(self.replay_buffer) < self.batch_size:
@@ -172,10 +244,8 @@ class DQNAgent(Agent):
         minibatch_rewards = [prev[2] for prev in minibatch]
         minibatch_next_states = np.array([prev[3] for prev in minibatch])
 
-        # Compute gradient
-        # Q^(s_j+1)
+        # Compute target
         target_q_values = self.model_target(minibatch_next_states)
-        # max_a' Q^(s_j+1)_a'
         target_term = minibatch_rewards + self.gamma * tf.reduce_max(
             target_q_values,
             axis=1
@@ -183,7 +253,6 @@ class DQNAgent(Agent):
         mask = tf.one_hot(minibatch_actions, 21)
         with tf.GradientTape() as tape:
             q_values = self.model(minibatch_states)
-            # TODO: not sure what exactly these two lines do?
             q_action = tf.reduce_sum(tf.multiply(q_values, mask), axis=1)
             loss = self.loss_function(target_term, q_action)
 

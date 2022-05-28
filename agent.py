@@ -1,8 +1,7 @@
 class Agent:
     '''
-    Description:
-        An abstract class, implementing a generic agent playing Nim. 
-        Specialized agents need to inherit from this class
+    An abstract class, implementing a generic agent playing Nim. 
+    Specialized agents need to inherit from this class
     '''
     def act(self, heaps):
         '''

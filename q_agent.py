@@ -3,16 +3,16 @@ from qlearning import get_possible_actions
 
 class QAgent(Agent):
     '''
-    Description:
-        Agent implementing Q-learning for the game Nim.
+    Agent implementing Q-learning for the game Nim.
 
     Parameters:
-        epsilon: float, in [0, 1]. 
-            epsilon of the epsilon-greedy policy.
-        alpha: float. 
-            learning rate.
-        gamma: float. 
-            discount factor.
+    ----------
+    epsilon: float, in [0, 1]. 
+        epsilon of the epsilon-greedy policy.
+    alpha: float. 
+        learning rate.
+    gamma: float. 
+        discount factor.
     '''
     def __init__(self, epsilon, alpha=0.1, gamma=0.99):
         self.epsilon = epsilon
@@ -25,14 +25,14 @@ class QAgent(Agent):
         Get the Q-values of all the allowed actions, for a given state.
 
         Parameters
-            ----------
-            heaps : list of integers
-                list of heap sizes.
+        ----------
+        heaps : list of integers
+            list of heap sizes.
 
         Returns
-            ----------
-            qtable : dict
-                mapping action -> Q-value
+        ----------
+        qtable : dict
+            mapping action -> Q-value
         '''
         state = tuple(heaps)
         if state not in self.qtable:
@@ -44,17 +44,17 @@ class QAgent(Agent):
         Get the move with the highest Q-value for a given state, randomly breaking ties.
 
         Parameters
-            ----------
-            heaps : list of integers
-                    list of heap sizes.
+        ----------
+        heaps : list of integers
+                list of heap sizes.
 
         Returns
-            ----------
-            best_value: float. 
-                highest Q-value for the given state
-            best_move : tuple. Action with the highest Q-value for the given state
-                best_move[0] is the heap to take from (starts at 1)
-                best_move[1] is the number of elements to take from heap best_move[0]
+        ----------
+        best_value: float. 
+            highest Q-value for the given state
+        best_move : tuple. Action with the highest Q-value for the given state
+            best_move[0] is the heap to take from (starts at 1)
+            best_move[1] is the number of elements to take from heap best_move[0]
         '''
         # Randomly shuffle the dictionary, in order to randomly break ties.
         qvalues = list(self.get_qvalues(heaps).items())
@@ -72,14 +72,14 @@ class QAgent(Agent):
         Get the highest Q-value associated to a possible action for the given state.
 
         Parameters
-            ----------
-            heaps : list of integers
-                list of heap sizes.
+        ----------
+        heaps : list of integers
+            list of heap sizes.
 
         Returns
-            ----------
-            best_value: float. 
-                highest Q-value for the given state.
+        ----------
+        best_value: float. 
+            highest Q-value for the given state.
         '''
         best_value, best_move = self._pick_best_move(heaps)
         # If the game is already finished, return 0.
