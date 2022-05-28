@@ -106,7 +106,7 @@ class QAgent(Agent):
             move = random.choice(list(self.get_qvalues(heaps).keys()))
         else:
             # greedy
-            move = self._pick_best_move(heaps)[0]
+            move = self._pick_best_move(heaps)[1]
         return move
 
 
