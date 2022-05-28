@@ -1,4 +1,5 @@
 from agent import Agent
+from qlearning import get_possible_actions
 
 class QAgent(Agent):
     '''
