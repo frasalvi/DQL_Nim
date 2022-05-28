@@ -1,3 +1,4 @@
+import random
 from agent import Agent
 from qlearning import get_possible_actions
 
@@ -105,7 +106,7 @@ class QAgent(Agent):
             move = random.choice(list(self.get_qvalues(heaps).keys()))
         else:
             # greedy
-            move = self._pick_best_move(heaps)
+            move = self._pick_best_move(heaps)[0]
         return move
 
 
