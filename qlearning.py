@@ -4,11 +4,27 @@ import random
 
 from nim_env import NimEnv, OptimalPlayer
 
-# Helper functions to measure performance
 
-def measure_performance(agent, other_epsilon):
+def measure_performance(agent, other_epsilon, N=500):
+    '''
+    Measure performance of a given agent against the OptimalPlayer,
+    over N games, switching the initial player at each game.
+
+    Parameters
+    ----------
+    agent : Agent. 
+        agent playing againt the OptimalPlayer.
+    other_epsilon : float in [0, 1]. 
+        epsilon of the epsilon-greedy policy for the OptimalPlayer.
+    N : int. 
+        number of games to be played.
+
+    Returns
+    -------
+    won_ratio : float. 
+        ratio of games won by agent.
+    '''
     players = [agent, OptimalPlayer(other_epsilon)]
-    N = 500
     Nwin = 0
     Nloss = 0
     env = NimEnv()
@@ -30,25 +46,61 @@ def measure_performance(agent, other_epsilon):
             Nloss += 1
     return (Nwin - Nloss) / N
 
-def Mopt(agent):
+
+def Mopt(agent, N=500):
+    '''
+    Measure performance of a given agent against the OptimalPlayer with epsilon=0,
+    over N games, switching the initial player at each game.
+
+    Parameters
+    ----------
+    agent : Agent. 
+        agent playing againt the OptimalPlayer.
+    N : int. 
+        number of games to be played.
+
+    Returns
+    -------
+    mopt : float. 
+        ratio of games won by agent.
+    '''
     return measure_performance(agent, 0)
-def Mrand(agent):
+
+
+def Mrand(agent, N=500):
+    '''
+    Measure performance of a given agent against the OptimalPlayer with epsilon=1,
+    over N games, switching the initial player at each game.
+
+    Parameters
+    ----------
+    agent : Agent. 
+        agent playing againt the OptimalPlayer.
+    N : int. 
+        number of games to be played.
+
+    Returns
+    -------
+    mrand : float. 
+        ratio of games won by agent.
+    '''
     return measure_performance(agent, 1)
 
-# Core Q-Learning logic
+
 def get_possible_actions(heaps):
     '''
     Compute the list of allowed actions for a given state.
 
     Parameters
-        ----------
-        heaps : list of integers
-                list of heap sizes.
+    ----------
+    heaps : list of integers
+        list of heap sizes.
 
     Returns
-        -------
-        actions : list of integers (heap number)
-                  list of heap sizes (objects to remove)
+    -------
+    actions : list
+        actions[0] is a list of heaps to take from (starts at 1)
+        actions[1] is the number of elements taken from heaps actions[0]
     '''
     actions = []
     for i, heap_size in enumerate(heaps):
@@ -57,135 +109,52 @@ def get_possible_actions(heaps):
     return actions
 
 
-class LearningAgent:
-    '''
-    Description:
-        A class to implement an epsilon-greedy learning player in Nim.
-
-    Parameters:
-        epsilon: float, in [0, 1]. This is a value between 0-1 that indicates the
-            probability of making a random action instead of the optimal action
-            at any given time.
-    '''
-
-    def __init__(self, epsilon):
-        self.qtable = {}
-        self.epsilon = epsilon
-
-        self.last_state = None
-        self.last_move = None
-
-    def get_qvalues(self, heaps):
-        '''
-        Get the Q-values of all the allowed actions, for a given state.
-
-        Parameters
-            ----------
-            heaps : list of integers
-                    list of heap sizes.
-
-        Returns
-            ----------
-            qtable : dict of action -> Q-value
-        '''
-        state = tuple(heaps)
-        if state not in self.qtable:
-            self.qtable[state] = {action: 0 for action in get_possible_actions(state)}
-        return self.qtable[state]
-
-    def _pick_best_move(self, heaps):
-        '''
-        Get the move with the highest Q-value for a given state, randomly breaking ties.
-
-        Parameters
-            ----------
-            heaps : list of integers
-                    list of heap sizes.
-
-        Returns
-            ----------
-            max_act : tuple
-                max_act[0] is the heap to take from (starts at 1)
-                max_act[1] is the number of obj to take from heap #move[0]
-        '''
-        # Randomly shuffle the dictionary, in order to randomly break ties.
-        qvalues = list(self.get_qvalues(heaps).items())
-        random.shuffle(qvalues)
-        qvalues = dict(qvalues)
-
-        max_act = None
-        for act, val in qvalues.items():
-            if max_act is None or val > qvalues[max_act]:
-                max_act = act
-        return max_act
-
-    def get_max_qvalue(self, heaps):
-        '''
-        Get the highest Q-value associated to a possible action for the given state.
-
-        Parameters
-            ----------
-            heaps : list of integers
-                    list of heap sizes.
-
-        Returns
-            ----------
-            float (max Q-value)
-        '''
-        bestMove = self._pick_best_move(heaps)
-        # If the game is already finished, return 0.
-        return 0 if bestMove is None else self.get_qvalues(heaps)[bestMove]
-
-    def act(self, heaps):
-        '''
-        Take an action, given the current state.
-
-        Parameters
-        ----------
-        heaps : list of integers
-                list of heap sizes.
-
-        Returns
-        -------
-        move : list
-            move[0] is the heap to take from (starts at 1)
-            move[1] is the number of obj to take from heap #move[0]
-
-        '''
-        if random.random() < self.epsilon:
-            # random move
-            move = random.choice(list(self.get_qvalues(heaps).keys()))
-        else:
-            # greedy
-            move = self._pick_best_move(heaps)
-        return move
-
-# Maybe we can reuse LearningAgent later for DRL? (very unlikely) Otherwise if the hole classes have to be different,
-# there is no need for the QLearningAgent class, and it can be incorporated in LearningAgent
-# TODO: indeed, let's incorporate them. however we can reuse run_q_learning ;)
-
-class QLearningAgent(LearningAgent):
-    def __init__(self, epsilon, alpha=0.1, gamma=0.99):
-        super().__init__(epsilon)
-        self.alpha = alpha
-        self.gamma = gamma
-
-    def on_step(self, state, action, reward, new_state, debug=False):
-        action = tuple(action)
-        old_q_value = self.get_qvalues(state)[action]
-        new_q_value = old_q_value + self.alpha * (reward + self.gamma * self.get_max_qvalue(new_state) - old_q_value)
-        self.get_qvalues(state)[action] = new_q_value
-
-        if(debug):
-            print('Last state: ', state)
-            print('Last action: ', action)
-            print('Old qvalue: ', old_q_value, '; new qvalue: ', new_q_value, '; reward: ', reward)
-
 def call_on_step(agent, state, action, reward, next_state, debug):
+    '''
+    Wrapper for Agent.on_step, allowing to call it only for instances
+    of Agent, ignoring it for the OptimalPlayer.
+
+    Parameters
+    ----------
+    agent : Agent or env.OptimalPlayer. 
+        agent for which on_step should be called.
+    state : list of integers
+        list of heap sizes.
+    action : list
+        action[0] is the heap to take from (starts at 1)
+        action[1] is the number of elements taken from heap action[0]
+    reward : int. 
+        current reward.
+    new_state : list of integers
+            list of heap sizes.
+    debug : bool. 
+        if true, print debug information.
+    '''
     if hasattr(agent, "on_step"):
         agent.on_step(state, action, reward, next_state, debug)
 
+
 def run_q_learning(env: NimEnv, agent1, agent2, debug=False, catch_invalid_moves=False):
+    '''
+    Core logic of the game, running a match of Nim until its end and 
+    updating parameters of the agents.
+
+    Parameters
+    ----------
+    env: NimEnv. 
+        instance of the environment for the game Nim.
+    agent1 : Agent or env.OptimalPlayer.
+    agent2 : Agent or env.OptimalPlayer.
+    debug : bool. 
+        if true, print debug information.
+    catch_invalid_moves : bool. 
+        if true, invalid moves are caught.
+    
+    Returns
+    -------
+    reward : int.
+        final reward for agent1.
+    '''
     players = [agent1, agent2]
     #print("New game")
     if (debug):
@@ -203,6 +172,7 @@ def run_q_learning(env: NimEnv, agent1, agent2, debug=False, catch_invalid_moves
                 env.winner = env.current_player
                 env.heaps = [0, 0, 0]
                 reward = -1
+                break   ## !! we don't want to update the Q-value of the previous state.
                 #print("Caught invalid move!")
             else:
                 # Otherwise make sure to propagate on invalid moves

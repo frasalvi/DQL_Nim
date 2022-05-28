@@ -6,9 +6,12 @@ class QAgent(Agent):
         Agent implementing Q-learning for the game Nim.
 
     Parameters:
-        epsilon: float, in [0, 1]. epsilon of the epsilon-greedy policy.
-        alpha: float. learning rate.
-        gamma: float. decaying factor.
+        epsilon: float, in [0, 1]. 
+            epsilon of the epsilon-greedy policy.
+        alpha: float. 
+            learning rate.
+        gamma: float. 
+            discount factor.
     '''
     def __init__(self, epsilon, alpha=0.1, gamma=0.99):
         self.epsilon = epsilon
@@ -23,11 +26,12 @@ class QAgent(Agent):
         Parameters
             ----------
             heaps : list of integers
-                    list of heap sizes.
+                list of heap sizes.
 
         Returns
             ----------
-            qtable : dict of action -> Q-value
+            qtable : dict
+                mapping action -> Q-value
         '''
         state = tuple(heaps)
         if state not in self.qtable:
@@ -45,7 +49,8 @@ class QAgent(Agent):
 
         Returns
             ----------
-            best_value: float. Highest Q-value for the given state
+            best_value: float. 
+                highest Q-value for the given state
             best_move : tuple. Action with the highest Q-value for the given state
                 best_move[0] is the heap to take from (starts at 1)
                 best_move[1] is the number of elements to take from heap best_move[0]
@@ -68,11 +73,12 @@ class QAgent(Agent):
         Parameters
             ----------
             heaps : list of integers
-                    list of heap sizes.
+                list of heap sizes.
 
         Returns
             ----------
-            float (max Q-value)
+            best_value: float. 
+                highest Q-value for the given state.
         '''
         best_value, best_move = self._pick_best_move(heaps)
         # If the game is already finished, return 0.
@@ -85,7 +91,7 @@ class QAgent(Agent):
         Parameters
         ----------
         heaps : list of integers
-                list of heap sizes.
+            list of heap sizes.
 
         Returns
         -------
@@ -109,13 +115,16 @@ class QAgent(Agent):
         Parameters
         ----------
         state : list of integers
-                list of heap sizes.
-        action : action[0] is the heap to take from (starts at 1)
-                 action[1] is the number of obj taken from heap action[0]
-        reward : int. current reward.
+            list of heap sizes.
+        action : list
+            action[0] is the heap to take from (starts at 1)
+            action[1] is the number of elements taken from heap action[0]
+        reward : int. 
+            current reward.
         new_state : list of integers
-                    list of heap sizes.
-        debug : bool. if true, print debug information.
+            list of heap sizes.
+        debug : bool. 
+            if true, print debug information.
         '''
         action = tuple(action)
         old_q_value = self.get_qvalues(state)[action]

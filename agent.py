@@ -11,7 +11,7 @@ class Agent:
         Parameters
         ----------
         heaps : list of integers
-                list of heap sizes.
+            list of heap sizes.
 
         Returns
         -------
@@ -28,12 +28,15 @@ class Agent:
         Parameters
         ----------
         state : list of integers
-                list of heap sizes.
-        action : action[0] is the heap to take from (starts at 1)
-                 action[1] is the number of obj taken from heap action[0]
-        reward : int. current reward.
+            list of heap sizes.
+        action : list
+            action[0] is the heap to take from (starts at 1)
+            action[1] is the number of obj taken from heap action[0]
+        reward : int. 
+            current reward.
         new_state : list of integers
-                    list of heap sizes.
-        debug : bool. if true, print debug information.
+            list of heap sizes.
+        debug : bool. 
+            if true, print debug information.
         '''
         raise NotImplementedError
