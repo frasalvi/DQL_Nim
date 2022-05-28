@@ -8,7 +8,7 @@ from qlearning import *
 # General hyperparameters
 UPDATE_TARGET_EVERY = 500
 
-class DQNAgent:
+class DQNAgent(Agent):
     '''
     Description:
         A class to implement an epsilon-greedy learning player in Nim.
