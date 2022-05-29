@@ -237,7 +237,7 @@ class DQNAgent(Agent):
         minibatch_next_states = np.array([prev[3] for prev in minibatch])
 
         # Compute target
-        target_q_values = self.model_target(minibatch_next_states)
+        target_q_values = self.model_target(minibatch_next_states) * np.any(minibatch_next_states, axis=(1, 2)).astype(int)[:, None]
         target_term = minibatch_rewards + self.gamma * tf.reduce_max(
             target_q_values,
             axis=1
