@@ -17,7 +17,7 @@ colors = prop_cycle.by_key()['color']
 # Ratio 7 / 5
 WIDTH = 4
 HEIGHT = 5 * (4 / 7)
-NEW_HEIGHT_RATIO = 1.9
+NEW_HEIGHT_RATIO = 1.9 / 2
 
 def small_legend():
     """
