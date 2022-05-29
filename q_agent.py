@@ -66,7 +66,7 @@ class QAgent(Agent):
         for act, val in qvalues.items():
             if best_move is None or val > qvalues[best_move]:
                 best_move = act
-        return qvalues[best_move], best_move
+        return qvalues[best_move] if best_move else 0, best_move
 
     def get_max_qvalue(self, heaps):
         '''
@@ -83,8 +83,7 @@ class QAgent(Agent):
             highest Q-value for the given state.
         '''
         best_value, best_move = self._pick_best_move(heaps)
-        # If the game is already finished, return 0.
-        return 0 if best_move is None else best_value
+        return best_value
 
     def act(self, heaps):
         '''

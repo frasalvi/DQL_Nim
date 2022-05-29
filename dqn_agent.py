@@ -172,8 +172,7 @@ class DQNAgent(Agent):
             highest Q-value for the given state.
         '''
         best_value, best_move = self._pick_best_move(heaps)
-        # If the game is already finished, return 0.
-        return 0 if best_move is None else best_value
+        return best_value
 
     def act(self, heaps):
         '''
