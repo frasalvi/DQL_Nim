@@ -1,4 +1,7 @@
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Try to match IEEEtran used by the report
 plt.rcParams["font.family"] = "serif"
@@ -9,8 +12,12 @@ prop_cycle = plt.rcParams['axes.prop_cycle']
 colors = prop_cycle.by_key()['color']
 
 # reasonable figure sizes for plots
-WIDTH = 3.37566
-HEIGHT = 2
+# WIDTH = 3.37566
+# HEIGHT = 2
+# Ratio 7 / 5
+WIDTH = 4
+HEIGHT = 5 * (4 / 7)
+NEW_HEIGHT_RATIO = 1.9
 
 def small_legend():
     """
@@ -23,7 +30,7 @@ def export(plot_name, double=False, grid=True):
     Helper function to resize and export the current figure automatically.
     """
     plt.grid(grid) # ensure grid is displayed
-    plt.gcf().set_size_inches((WIDTH, HEIGHT * 2.3 if double == "triple" else HEIGHT * 1.5 if double else HEIGHT)) # resize
+    plt.gcf().set_size_inches((WIDTH, HEIGHT * NEW_HEIGHT_RATIO * 3 if double == "triple" else HEIGHT * NEW_HEIGHT_RATIO * 2 if double else HEIGHT)) # resize
     plt.tight_layout() # better subplot layout
     plt.savefig("plots/%s.pdf" % plot_name, bbox_inches='tight') # export with tight bounding boxes
 
