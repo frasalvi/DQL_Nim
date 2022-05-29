@@ -44,8 +44,7 @@ class DQNAgent(Agent):
         self.loss_function = keras.losses.Huber(delta=1)
         self.optimizer = keras.optimizers.Adam(learning_rate=alpha)#, clipnorm=1.0)
 
-        self.last_state = None
-        self.last_move = None
+        self.cum_loss = 0
 
     @staticmethod
     def _create_q_model():
@@ -247,10 +246,13 @@ class DQNAgent(Agent):
         with tf.GradientTape() as tape:
             q_values = self.model(minibatch_states)
             q_action = tf.reduce_sum(tf.multiply(q_values, mask), axis=1)
-            self.loss = self.loss_function(target_term, q_action)
-
+            loss = self.loss_function(target_term, q_action)
+        
+        # Accumulate loss
+        self.cum_loss += loss
+    
         # Backprop
-        grads = tape.gradient(self.loss, self.model.trainable_variables)
+        grads = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
     def update_target(self):
