@@ -1,3 +1,6 @@
+import numpy as np
+import random
+from operator import itemgetter
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -148,20 +151,11 @@ class DQNAgent(Agent):
         max_index = np.argmax(qvls)
         return qvls[max_index], (max_index // 7 + 1, max_index % 7 + 1)
         """
-        best_value = -1e9
-        best_moves = [None]
         qvls = self.get_qvalues(heaps)
-        max_index = np.argmax(qvls)
+        qvalues_indexed = [(i, qvl) for i, qvl in enumerate(qvls)]
+        random.shuffle(qvalues_indexed)
+        max_index = max(qvalues_indexed, key=itemgetter(1))[0]
         return qvls[max_index], (max_index // 7 + 1, max_index % 7 + 1)
-        for heap in range(3):
-            for how_much in range(7):
-                q_value = qvls[heap * 7 + how_much]
-                if q_value >= best_value:
-                    if q_value > best_value:
-                        best_moves.clear()
-                        best_value = q_value
-                    best_moves.append((heap + 1, how_much + 1))
-        return best_value, random.choice(best_moves)
 
     def get_max_qvalue(self, heaps):
         '''
@@ -254,10 +248,10 @@ class DQNAgent(Agent):
         with tf.GradientTape() as tape:
             q_values = self.model(minibatch_states)
             q_action = tf.reduce_sum(tf.multiply(q_values, mask), axis=1)
-            loss = self.loss_function(target_term, q_action)
+            self.loss = self.loss_function(target_term, q_action)
 
         # Backprop
-        grads = tape.gradient(loss, self.model.trainable_variables)
+        grads = tape.gradient(self.loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
     def update_target(self):
