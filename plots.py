@@ -26,3 +26,15 @@ def export(plot_name, double=False, grid=True):
     plt.gcf().set_size_inches((WIDTH, HEIGHT * 2.3 if double == "triple" else HEIGHT * 1.5 if double else HEIGHT)) # resize
     plt.tight_layout() # better subplot layout
     plt.savefig("plots/%s.pdf" % plot_name, bbox_inches='tight') # export with tight bounding boxes
+
+def plot_heatmap(qvalues, **kwargs):
+    heaps, heap_sizes = list(zip(*qvalues.keys()))
+    df = pd.DataFrame({'Heap': [1]*7+[2]*7+[3]*7, 'Heap size': list(np.arange(7, 0, -1))*3})
+    df = df.merge(pd.DataFrame({'Heap': heaps, 'Heap size': heap_sizes, 'qvalue': qvalues.values()}),
+                  on=['Heap', 'Heap size'], how='outer')
+    heatmap = df.pivot('Heap', 'Heap size', 'qvalue')
+    sns.heatmap(heatmap, cmap='RdYlGn', center=0, vmin=-1, vmax=1, annot=True, fmt=".1f", **kwargs)
+
+def plot_heatmap_from_deep(qvalues, **kwargs):
+    dict_converted = { (i//7+1, i%7+1): float(val) for i, val in enumerate(qvalues) }
+    plot_heatmap(dict_converted, **kwargs)
